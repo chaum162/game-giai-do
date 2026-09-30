@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thử Thách Trí Tuệ</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#667eea,#764ba2)}
+.app{width:min(760px,100%);background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 18px 50px #0004}
+header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;text-align:center;padding:25px}header h1{margin:0 0 7px}header p{margin:0}
+.stats{display:flex;gap:10px;padding:15px;background:#f7f7fb}.stat{flex:1;text-align:center;background:#fff;border-radius:12px;padding:9px}.stat b{display:block;font-size:21px;color:#4f46e5}
+main{padding:26px}.progress{height:9px;background:#e9e9f2;border-radius:10px;overflow:hidden}.bar{height:100%;width:0;background:#7c3aed;transition:.3s}
+.category{margin-top:20px;color:#7c3aed;font-weight:bold;font-size:14px}h2{line-height:1.4}.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{border:0;border-radius:13px;padding:15px;font-size:16px;cursor:pointer}.answer{background:#f0f1f8;text-align:left}.answer:hover{background:#e1e3f5}.answer.correct{background:#bbf7d0;border:2px solid #16a34a}.answer.wrong{background:#fecaca;border:2px solid #dc2626}.answer:disabled{cursor:not-allowed}
+#next{margin-top:20px;width:100%;background:#4f46e5;color:#fff;font-weight:bold}#next:disabled{opacity:.45}.start{text-align:center;padding:35px}.start button,.restart{background:#4f46e5;color:#fff;font-weight:bold}.hint{margin-top:16px;background:#fff7ed;border-radius:12px;padding:12px;color:#9a3412}.hidden{display:none}.result{text-align:center;padding:35px}.score{font-size:52px;font-weight:800;color:#4f46e5;margin:15px}
+@media(max-width:600px){.answers{grid-template-columns:1fr}.stats{font-size:13px}main{padding:20px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>🧠 THỬ THÁCH TRÍ TUỆ</h1><p>Game giải đố – càng nhanh càng nhiều điểm!</p></header>
+
+<div id="start" class="start">
+<h2>🎯 Sẵn sàng chưa?</h2>
+<p>10 câu đố logic, mẹo và toán. Mỗi câu đúng được điểm theo tốc độ.</p>
+<p>Bạn có <b>3 mạng</b> và <b>30 giây</b> cho mỗi câu.</p>
+<button onclick="startGame()">BẮT ĐẦU CHƠI</button>
+</div>
+
+<div id="game" class="hidden">
+<div class="stats">
+<div class="stat">Câu<b id="num">1/10</b></div>
+<div class="stat">Điểm<b id="score">0</b></div>
+<div class="stat">Mạng<b id="lives">❤️❤️❤️</b></div>
+<div class="stat">⏱️<b id="time">30</b></div>
+</div>
+<main>
+<div class="progress"><div id="bar" class="bar"></div></div>
+<div id="cat" class="category"></div><h2 id="question"></h2>
+<div id="answers" class="answers"></div>
+<div id="hint" class="hint hidden"></div>
+<button id="next" disabled onclick="nextQ()">CÂU TIẾP THEO →</button>
+</main>
+</div>
+
+<div id="result" class="result hidden">
+<h2>🎉 Hoàn thành!</h2><p>Điểm của bạn:</p><div id="final" class="score">0</div>
+<p id="msg"></p><button class="restart" onclick="startGame()">CHƠI LẠI</button>
+</div>
+</div>
+
+<script>
+const qs=[
+["LOGIC","Có 3 quả táo trên bàn. Bạn lấy đi 2 quả. Bạn có bao nhiêu quả?",["1 quả","2 quả","3 quả","0 quả"],1,"Bạn đã lấy 2 quả."],
+["SUY LUẬN","Một con gà đứng trên một chân nặng 2 kg. Đứng bằng hai chân thì nặng bao nhiêu?",["1 kg","2 kg","3 kg","4 kg"],1,"Đổi tư thế không đổi cân nặng."],
+["MẸO","Tháng nào có 28 ngày?",["Tháng 2","Tháng 4","Tất cả các tháng","Không có tháng nào"],2,"Tất cả các tháng đều có ít nhất 28 ngày."],
+["TOÁN","Số tiếp theo là gì: 2, 4, 8, 16, ?",["20","24","30","32"],3,"Mỗi số nhân 2."],
+["MẸO","Bạn có 5 cây nến, gió thổi tắt 2 cây. Sáng hôm sau còn mấy cây nến?",["2","3","5","0"],0,"Hai cây bị tắt không cháy hết."],
+["TOÁN","Đồng hồ chỉ 3 giờ. Góc nhỏ giữa hai kim là bao nhiêu?",["30°","60°","90°","180°"],2,"Hai kim vuông góc ở 3 giờ."],
+["MẸO","Cái gì càng lấy đi thì càng lớn?",["Cái túi","Cái hố","Quả bóng","Cây"],1,"Càng lấy đất khỏi hố thì hố càng lớn."],
+["LOGIC","Nếu 3 con mèo bắt 3 con chuột trong 3 phút, 1 con mèo bắt 1 con chuột trong bao lâu?",["1 phút","3 phút","6 phút","9 phút"],1,"Mỗi con mèo bắt 1 con chuột trong 3 phút."],
+["LOGIC","Bạn vượt người đang đứng thứ hai trong cuộc đua. Bạn đứng thứ mấy?",["Nhất","Nhì","Ba","Không xác định"],1,"Bạn chiếm vị trí của người thứ hai."],
+["MẸO","Phòng tối có nến, đèn dầu và bếp gas. Bạn có một que diêm. Bạn thắp gì trước?",["Nến","Đèn dầu","Bếp gas","Que diêm"],3,"Bạn phải thắp que diêm trước."]
+];
+let i=0,score=0,lives=3,t=30,timer,answered=false;
+function startGame(){i=0;score=0;lives=3;document.getElementById("start").classList.add("hidden");document.getElementById("result").classList.add("hidden");document.getElementById("game").classList.remove("hidden");showQ()}
+function showQ(){clearInterval(timer);answered=false;t=30;let q=qs[i];num.textContent=(i+1)+"/"+qs.length;document.getElementById("score").textContent=score;document.getElementById("lives").textContent="❤️".repeat(lives)+"🖤".repeat(3-lives);document.getElementById("time").textContent=t;bar.style.width=(i/qs.length*100)+"%";cat.textContent=q[0];question.textContent=q[1];hint.classList.add("hidden");hint.textContent="💡 Gợi ý: "+q[4];answers.innerHTML="";q[2].forEach((x,n)=>{let b=document.createElement("button");b.className="answer";b.textContent=String.fromCharCode(65+n)+". "+x;b.onclick=()=>answer(n,b);answers.appendChild(b)});next.disabled=true;timer=setInterval(()=>{t--;document.getElementById("time").textContent=t;if(t<=0){clearInterval(timer);answer(-1,null)}},1000)}
+function answer(n,b){if(answered)return;answered=true;clearInterval(timer);let q=qs[i];document.querySelectorAll(".answer").forEach((x,k)=>{x.disabled=true;if(k===q[3])x.classList.add("correct")});if(n===q[3]){score+=100+t*2}else{if(b)b.classList.add("wrong");lives--;hint.classList.remove("hidden");if(lives<=0){setTimeout(endGame,700);return}}document.getElementById("score").textContent=score;document.getElementById("lives").textContent="❤️".repeat(lives)+"🖤".repeat(3-lives);next.disabled=false}
+function nextQ(){i++;if(i>=qs.length)endGame();else showQ()}
+function endGame(){clearInterval(timer);game.classList.add("hidden");result.classList.remove("hidden");final.textContent=score;msg.textContent=score>=1000?"🏆 Xuất sắc! Bạn là cao thủ giải đố!":score>=600?"👏 Rất tốt! Hãy thử phá kỷ lục nhé!":"💪 Chơi lại để nâng điểm nào!"}
+</script>
+</body>
+</html>
